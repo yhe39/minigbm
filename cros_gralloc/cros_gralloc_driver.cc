@@ -309,6 +309,9 @@ bool cros_gralloc_driver::get_resolved_format_and_use_flags(
 	struct combination *combo;
 
 	struct driver *drv = (descriptor->use_flags & BO_USE_SCANOUT) ? drv_kms_ : drv_render_;
+	if (descriptor->use_flags & BO_USE_SCANOUT) {
+		ALOGE("--yue use drv_kms_\n");
+	}
 	if (mt8183_camera_quirk_ && (descriptor->use_flags & BO_USE_CAMERA_READ) &&
 	    !(descriptor->use_flags & BO_USE_SCANOUT) &&
 	    descriptor->drm_format == DRM_FORMAT_FLEX_IMPLEMENTATION_DEFINED) {
@@ -322,18 +325,23 @@ bool cros_gralloc_driver::get_resolved_format_and_use_flags(
 
 	combo = drv_get_combination(drv, resolved_format, resolved_use_flags);
 	if (!combo && (descriptor->use_flags & BO_USE_SCANOUT)) {
+		ALOGE("--yue 111\n");
 		if (is_kmsro_enabled()) {
+			ALOGE("-yue-is_kmsro_enabled\n");
 			/* if kmsro is enabled, it is scanout buffer and not used for video,
 			 * don't need remove scanout flag */
 			if (!IsSupportedYUVFormat(descriptor->droid_format)) {
+				ALOGE("yue !yuv format\n");
 				combo = drv_get_combination(drv, resolved_format,
 							    (descriptor->use_flags) & (~BO_USE_SCANOUT));
 			} else {
+				ALOGE("yue yuv format\n");
 				drv = drv_render_;
 				resolved_use_flags &= ~BO_USE_SCANOUT;
 				combo = drv_get_combination(drv, resolved_format, descriptor->use_flags);
 			}
 		} else {
+			ALOGE("--yue not srivo mode \n");
 			resolved_use_flags &= ~BO_USE_SCANOUT;
 			combo = drv_get_combination(drv, resolved_format, descriptor->use_flags);
 		}
@@ -414,9 +422,11 @@ int32_t cros_gralloc_driver::allocate(const struct cros_gralloc_buffer_descripto
 
 	struct driver *drv;
 	if ((descriptor->use_flags & BO_USE_SCANOUT)) {
+		ALOGE("-yue- use kms driver\n");
 		from_kms = true;
 		drv = drv_kms_;
 	} else {
+		ALOGE("-yue- use i915 driver\n");
 		drv = drv_render_;
 	}
 
